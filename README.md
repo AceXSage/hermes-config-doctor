@@ -7,6 +7,38 @@
 配置文件是手改的，一次拼错缩进、一次把 key 贴成占位符，重启后就起不来了，
 而且报错只说“解析失败”，看不出是第几行、哪一项。所以写了个固定顺序的体检表。
 
+## 环境要求
+
+- Windows 10/11（脚本是纯 Python，macOS / Linux 下 `python3 hermes_config_doctor.py` 同样可跑，只是没有 .cmd 启动器）
+- Python 3.8 及以上
+- PyYAML：`pip install pyyaml`（除它之外全是标准库，不联网）
+- 默认读写 `%LOCALAPPDATA%\hermes\config.yaml`（Linux/macOS 为 `~/.local/share/hermes/config.yaml`），可用 `--config <路径>` 指向别处
+
+## 三步跑起来
+
+```
+git clone https://github.com/AceXSage/hermes-config-doctor.git
+pip install pyyaml
+```
+
+Windows 双击 `hermes-config-doctor.cmd`，或在命令行里：
+
+```
+python hermes_config_doctor.py check      # 体检（默认）
+python hermes_config_doctor.py backup     # 备份
+```
+
+## 首次运行会生成什么
+
+- 只读 `config.yaml`，体检过程不改任何配置
+- 跑 `backup` 才会新建 `config-backups/` 目录，里面按时间戳存副本，最多保留 20 份，超出的自动删最旧的
+- 跑 `restore` 前会先把当前配置另存一份，避免还原时把好的盖掉
+
+## 适用范围
+
+第 4-8 项是按 Hermes Agent 的 config.yaml 结构写的（model / custom_providers / 凭据池）。
+其它项目拿它体检普通 YAML 也能跑，但那几项会因为找不到对应字段而报「跳过」。
+
 ## 检查项（10 项，固定顺序）
 
 1. 文件存在：字节数、最后修改时间
@@ -26,6 +58,7 @@
 ## 用法
 
 ```
+hermes-config-doctor.cmd                       # Windows 双击或命令行
 python hermes_config_doctor.py                 # 体检
 python hermes_config_doctor.py backup          # 备份到 config-backups/，留最近 20 份
 python hermes_config_doctor.py list            # 列出备份，标正常/损坏
