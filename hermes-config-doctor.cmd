@@ -1,21 +1,30 @@
 @echo off
 chcp 65001 >nul
-rem hermes-config-doctor launcher - any Windows with Python 3.8+ installed
 setlocal
+cd /d "%~dp0"
 set "SCRIPT=%~dp0hermes_config_doctor.py"
-if not exist "%SCRIPT%" (
-  echo [ERROR] hermes_config_doctor.py not found next to this launcher
-  exit /b 1
-)
+if not exist "%SCRIPT%" goto NOFILE
 where py >nul 2>nul
-if %errorlevel%==0 (
-  py -3 "%SCRIPT%" %*
-  exit /b %errorlevel%
-)
+if errorlevel 1 goto TRY_PYTHON
+py -3 -c "import yaml" >nul 2>nul
+if errorlevel 1 goto TRY_PYTHON
+py -3 "%SCRIPT%" %*
+goto END
+:TRY_PYTHON
 where python >nul 2>nul
-if %errorlevel%==0 (
-  python "%SCRIPT%" %*
-  exit /b %errorlevel%
-)
-echo [ERROR] Python not found. Install Python 3.8+ and tick Add python.exe to PATH.
-exit /b 1
+if errorlevel 1 goto NO_PY
+python -c "import yaml" >nul 2>nul
+if errorlevel 1 goto NO_YAML
+python "%SCRIPT%" %*
+goto END
+:NOFILE
+echo [ERROR] hermes_config_doctor.py not found next to this launcher.
+goto END
+:NO_PY
+echo [ERROR] Python not found on PATH.
+echo   Install Python 3.8+ and tick "Add python.exe to PATH", then run this again.
+goto END
+:NO_YAML
+echo [ERROR] PyYAML missing. Run: python -m pip install pyyaml
+:END
+endlocal
